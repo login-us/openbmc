@@ -1,0 +1,311 @@
+Refer to Yocto Project Reference Manual
+-https://www.yoctoproject.org/docs/2.5.2/ref-manual/ref-manual.html
+
+1. System Requirements
+	1)Supported Linux Distributions
+		Ubuntu 14.10
+		Ubuntu 15.04
+		Ubuntu 15.10
+		Ubuntu 16.04 (LTS)
+		Fedora release 22
+		Fedora release 23
+		CentOS release 7.x
+		Debian GNU/Linux 8.x (Jessie)
+		Debian GNU/Linux 9.x (Stretch)
+		openSUSE 13.2
+		openSUSE 42.1
+
+	2)Required Packages for the Host Development System for CentOS 7
+		-Essentials
+			--Packages needed to build an image for a headless system:
+
+		     $ sudo yum install -y epel-release
+		     $ sudo yum makecache
+		     $ sudo yum install gawk make wget tar bzip2 gzip python unzip perl patch \
+		     		diffutils diffstat git cpp gcc gcc-c++ glibc-devel texinfo chrpath socat \
+		     		perl-Data-Dumper perl-Text-ParseWords perl-Thread-Queue python34-pip xz \
+		     		which SDL-devel xterm
+                        
+			※Notes
+				-Extra Packages for Enterprise Linux (i.e. epel-release) is a collection of packages from Fedora built on RHEL/CentOS for easy installation of packages not included in enterprise Linux by default. You need to install these packages separately.
+				-The makecache command consumes additional Metadata from epel-release.
+
+		-Graphical and Eclipse Plug-In Extras
+			--Packages recommended if the host system has graphics support or if you are going to use the Eclipse IDE:
+
+     			$ sudo yum install SDL-devel xterm
+                        
+		-Documentation
+			--Packages needed if you are going to build out the Yocto Project documentation manuals:
+
+     			$ sudo yum install make docbook-style-dsssl docbook-style-xsl \
+     				docbook-dtds docbook-utils fop libxslt dblatex xmlto
+                        
+		-OpenEmbedded Self-Test (oe-selftest)
+			--Packages needed if you are going to run oe-selftest:
+
+     			$ sudo yum install GitPython
+
+   3)Required Git, tar, and Python Versions
+   	-In order to use the build system, your host development system must meet the following version requirements for Git, tar, and Python:
+
+			Git 1.8.3.1 or greater
+			tar 1.27 or greater
+			Python 3.4.0 or greater
+
+			--------------------------------------------------
+			#Python 3.7.2 installation
+			# yum -y groupinstall development
+			# yum -y install zlib-devel
+			To install Python 3.7, run the following commands:
+			# yum install libffi-devel     <----Python 3.7.2를 CentOS 7에 설치할 때 꼭 필요.
+			<---만일 Ubuntu일 경우에는 libffi-dev를 설치할 것.
+			<--- make install할 때 오류(ModuleNotFoundError: No module names '_ctypes') 발생.
+			<--- Python 3.6.3을 CentOS 7에 설치할 때는 필요없음.
+
+			In /home/instructor/Download>
+			# wget https://www.python.org/ftp/python/3.7.2/Python-3.7.2.tar.xz
+			# tar xJf Python-3.7.2.tar.xz
+			# cd Python-3.7.2
+			# ./configure --enable-optimizations
+			# make
+			# make install
+
+			<-- 혹시 3.6.3 설치시 아래의 오류가 발생시
+			zipimport.zipImportError: can't decompress data; zlib not available
+			<-- 해결법
+			CentOS/Fedora  # yum install zlib-devel
+			Debian/Ubuntu  $ sudo apt-get install zlib1g-dev
+			
+			$ python3 --version
+
+			#Change python version system-wide
+			# update-alternatives --install /usr/bin/python python /usr/local/bin/python3.7 1
+			# update-alternatives --config python
+			# python --version
+			-------------------------------------------------
+
+		-If your host development system does not meet all these requirements, you can resolve this by installing a buildtools tarball that contains these tools. 
+		-You can get the tarball one of two ways: download a pre-built tarball or use BitBake to build the tarball.
+
+	4)Downloading a Pre-Built buildtools Tarball
+		-Downloading and running a pre-built buildtools installer is the easiest of the two methods by which you can get these tools:
+		-Locate and download the *.sh at http://downloads.yoctoproject.org/releases/yocto/yocto-2.5.2/buildtools/.
+
+			# wget http://downloads.yoctoproject.org/releases/yocto/yocto-2.5.2/buildtools/x86_64-buildtools-nativesdk-standalone-2.5.2.sh
+
+
+		-Execute the installation script. Here is an example:
+
+     		# sh ~/Downloads/x86_64-buildtools-nativesdk-standalone-2.5.2.sh
+
+     		# chmod +x x86_64-buildtools-nativesdk-standalone-2.5.2.sh
+     		# sh ./x86_64-buildtools-nativesdk-standalone-2.5.2.sh
+
+		-During execution, a prompt appears that allows you to choose the installation directory. For example, you could choose the following:
+
+     		/home/your-username/buildtools
+
+     		Build tools installer version 2.5.2
+			===================================
+			Enter target directory for SDK (default: /opt/poky/2.5.2): /home/instructor/buildtools
+			You are about to install the SDK to "/home/instructor/buildtools". Proceed[Y/n]? y
+			Extracting SDK.........done
+			Setting it up...done
+			SDK has been successfully set up and is ready to be used.
+			Each time you wish to use the SDK in a new shell session, you need to source the environment setup script e.g.
+			 $ . /home/instructor/buildtools/environment-setup-x86_64-pokysdk-linux
+                        
+		-Source the tools environment setup script by using a command like the following:
+     		$ source /home/your_username/buildtools/environment-setup-i586-poky-linux
+
+     		# chown instructor:instructor -R buildtools
+     		$ source /home/instructor/buildtools/environment-setup-x86_64-pokysdk-linux
+     		$ echo $PATH
+     		/home/instructor/buildtools/sysroots/x86_64-pokysdk-linux/usr/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/home/instructor/.local/bin:/home/instructor/bin
+                        
+		-Of course, you need to supply your installation directory and be sure to use the right file (i.e. i585 or x86-64).
+		-After you have sourced the setup script, the tools are added to PATH and any other environment variables required to run the tools are initialized. 
+		-The results are working versions versions of Git, tar, Python and chrpath.
+
+
+2. Use Git to Clone Poky
+	1)Once you complete the setup instructions for your machine, you need to get a copy of the Poky repository on your build host. 
+	2)Use the following commands to clone the Poky repository.
+		-Poky Source code downloads
+			$ git clone git://git.yoctoproject.org/poky
+			Cloning into 'poky'...
+			remote: Counting objects: 430715, done.
+			remote: Compressing objects: 100% (101632/101632), done.
+			remote: Total 430715 (delta 322116), reused 430594 (delta 321996)
+			Receiving objects: 100% (430715/430715), 153.41 MiB | 625.00 KiB/s, done.
+			Resolving deltas: 100% (322116/322116), done.
+
+	3)Download가 끝나면
+   		/home/instructor/poky/
+
+   4)Move to the poky directory and take a look at the tags:
+		$ cd poky
+		$ git fetch --tags
+		$ git tag
+			1.1_M1.final
+	     	1.1_M1.rc1
+	     	1.1_M1.rc2
+	     	1.1_M2.final
+	     	1.1_M2.rc1
+	        .
+	        .
+	        .
+	     	yocto-2.5
+	     	yocto-2.5.1
+	     	yocto-2.5.2
+	     	yocto-2.6
+	     	yocto-2.6.1
+	     	yocto_1.5_M5.rc8
+
+	    -to exit
+	     	:q
+
+	    -For this example, check out the branch based on the yocto-2.6.1 release:
+     		$ git checkout tags/yocto-2.6.1 -b my-yocto-2.6.1
+     		Switched to a new branch 'my-yocto-2.6.1'
+
+     	-The previous Git checkout command creates a local branch named my-yocto-2.6.1. 
+     	-The files available to you in that branch exactly match the repository's files in the "thud" development branch at the time of the Yocto Project yocto-2.6.1 release.
+
+
+3. Building Your Image
+	1)Use the following steps to build your image. 
+	2)The build process creates an entire Linux distribution, including the toolchain, from source.
+	3)Initialize the Build Environment
+		-From within the poky directory, run the oe-init-build-env environment setup script to define Yocto Project's build environment on your build host.
+
+			$ cd poky
+			$ git clone https://github.com/openbmc/meta-phosphor.git
+			$ git clone https://github.com/openbmc/meta-aspeed.git
+			$ git clone https://github.com/openbmc/openbmc.git
+			$ source ./oe-init-build-env mybuild
+			
+			You had no conf/local.conf file. This configuration file has therefore been created for you with some default values. You may wish to edit it to, for example, select a different MACHINE (target hardware). See conf/local.conf for more information as common configuration options are commented.
+
+			You had no conf/bblayers.conf file. This configuration file has therefore been created for you with some default values. To add additional metadata layers into your configuration please add entries to conf/bblayers.conf.
+
+			The Yocto Project has extensive documentation about OE including a reference manual which can be found at:
+			    http://yoctoproject.org/documentation
+
+			For more information about OpenEmbedded see their website:
+			    http://www.openembedded.org/
+
+			### Shell environment set up for builds. ###
+
+			You can now run 'bitbake <target>'
+
+			Common targets are:
+			    core-image-minimal
+			    core-image-sato
+			    meta-toolchain
+			    meta-ide-support
+
+			You can also run generated qemu images with a command like 'runqemu qemux86'
+
+		-Among other things, the script creates the Build Directory, which is build in this case and is located in the Source Directory. 
+		-After the script runs, your current working directory is set to the Build Directory. 
+		-Later, when the build completes, the Build Directory contains all the files created during the build.
+
+	4)Examine Your Local Configuration File
+		-When you set up the build environment, a local configuration file named local.conf becomes available in a conf subdirectory of the Build Directory. 
+		-For this example, the defaults are set to build for a qemux86 target, which is suitable for emulation.
+		-The package manager used is set to the RPM package manager.
+
+		-mybuild/bblayers.conf 수정
+			# POKY_BBLAYERS_CONF_VERSION is increased each time build/conf/bblayers.conf
+			# changes incompatibly
+			POKY_BBLAYERS_CONF_VERSION = "2"
+
+			BBPATH = "${TOPDIR}"
+			BBFILES ?= ""
+
+			BBLAYERS ?= " \
+			  /home/instructor/poky/meta \
+			  /home/instructor/poky/meta-poky \
+			  /home/instructor/poky/meta-yocto-bsp \
+			  /home/instructor/poky/openbmc/meta-openembedded/meta-oe \
+			  /home/instructor/poky/openbmc/meta-openembedded/meta-networking \
+			  /home/instructor/poky/openbmc/meta-openembedded/meta-python \
+			  /home/instructor/poky/openbmc/meta-openembedded/meta-webserver \
+			  /home/instructor/poky/meta-phosphor \
+			  /home/instructor/poky/meta-aspeed \
+			  /home/instructor/poky/openbmc/meta-evb \
+			  /home/instructor/poky/openbmc/meta-evb/meta-evb-aspeed \
+			  /home/instructor/poky/openbmc/meta-evb/meta-evb-aspeed/meta-evb-ast2500 \
+			  "
+
+			BBLAYERS_NON_REMOVABLE ?= " \
+			  /home/instructor/poky/meta \
+			  /home/instructor/poky/meta-poky \
+			  /home/instructor/poky/meta-yocto-bsp \
+			  /home/instructor/poky/openbmc/meta-openembedded/meta-oe \
+			  /home/instructor/poky/openbmc/meta-openembedded/meta-networking \
+			  /home/instructor/poky/openbmc/meta-openembedded/meta-python \
+			  /home/instructor/poky/openbmc/meta-openembedded/meta-webserver \
+			  /home/instructor/poky/meta-phosphor \
+			  /home/instructor/poky/meta-aspeed \
+			  /home/instructor/poky/openbmc/meta-evb \
+			  /home/instructor/poky/openbmc/meta-evb/meta-evb-aspeed \
+			  /home/instructor/poky/openbmc/meta-evb/meta-evb-aspeed/meta-evb-ast2500 \
+			  "
+		-local.conf 수정
+			MACHINE ??= "evb-ast2500"
+			DISTRO ?= "openbmc-phosphor"
+			PACKAGE_CLASSES ?= "package_rpm"
+			SANITY_TESTED_DISTROS_append ?= " *"
+			EXTRA_IMAGE_FEATURES = "debug-tweaks"
+			USER_CLASSES ?= "buildstats image-mklibs image-prelink"
+			PATCHRESOLVE = "noop"
+			BB_DISKMON_DIRS = "\
+			    STOPTASKS,${TMPDIR},1G,100K \
+			    STOPTASKS,${DL_DIR},1G,100K \
+			    STOPTASKS,${SSTATE_DIR},1G,100K \
+			    STOPTASKS,/tmp,100M,100K \
+			    ABORT,${TMPDIR},100M,1K \
+			    ABORT,${DL_DIR},100M,1K \
+			    ABORT,${SSTATE_DIR},100M,1K \
+			    ABORT,/tmp,10M,1K"
+			CONF_VERSION = "1"
+			INHERIT += "extrausers"
+			EXTRA_USERS_PARAMS = " \
+			  usermod -p '\$1\$UGMqyqdG\$FZiylVFmRRfl9Z0Ue8G7e/' root; \
+			"
+
+		-openbmc/meta-evb/conf/layer.conf
+			# We have a conf and classes directory, add to BBPATH
+			BBPATH .= ":${LAYERDIR}"
+
+			BBFILE_COLLECTIONS += "evb"
+			BBFILE_PATTERN_evb = ""
+			LAYERSERIES_COMPAT_evb = "thud"   <---code 추가
+			# Provide a variable that points the base of the evb layer.
+			EVBBASE = '${@os.path.normpath("${LAYERDIR}/")}'
+
+		-openbmc/meta-evb/meta-evb-aspeed/conf/layer.conf
+			# We have a conf and classes directory, add to BBPATH
+			BBPATH .= ":${LAYERDIR}"
+
+			BBFILE_COLLECTIONS += "evb-aspeed"
+			BBFILE_PATTERN_evb-aspeed = ""
+			LAYERSERIES_COMPAT_evb-aspeed = "thud"
+
+		-openbmc/meta-evb/meta-evb-aspeed/meta-evb-ast2500/conf/layer.conf
+			# We have a conf and classes directory, add to BBPATH
+			BBPATH .= ":${LAYERDIR}"
+
+			BBFILE_COLLECTIONS += "evb-ast2500"
+			BBFILE_PATTERN_evb-ast2500 = ""
+			LAYERSERIES_COMPAT_evb-ast2500 = "thud"
+
+	5)Start the Build
+		-Continue with the following command to build an OS image for the target, which is core-image-sato in this example:
+			$ bitbake core-image-sato
+
+			$ bitbake linux-aspeed
+		-이미지 첨가 : bitbake 사진.png
